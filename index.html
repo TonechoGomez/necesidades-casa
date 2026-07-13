@@ -330,7 +330,7 @@
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
     let cajonActivo = '';
-    let estaGuardando = false; // "Semáforo" para que la recarga automática no pise tus cambios
+    let estaGuardando = false; // El semáforo para evitar que se borren los datos al escribir
 
     const apartadosFijos = [
         { id: 'super', nombre: 'Supermercado', icono: '🍏' },
@@ -340,7 +340,7 @@
     ];
 
     async function cargarDatosNube() {
-        if (estaGuardando) return; // Si la app está ocupada guardando algo que escribiste, detiene la recarga
+        if (estaGuardando) return; // Si estamos guardando algo, ignoramos la sincronización externa transitoria
         try {
             const res = await fetch(URL_NUBE, {
                 headers: { "X-Master-Key": API_KEY }
@@ -366,7 +366,7 @@
     }
 
     async function guardarDatosNube() {
-        estaGuardando = true; // Bloquea la recarga de fondo temporalmente
+        estaGuardando = true; // Activamos el semáforo de bloqueo
         const estructuraAGuardar = {
             listaCoches: coches,
             super: datosApp.super,
@@ -390,7 +390,7 @@
         } catch (e) {
             console.error("Error al guardar", e);
         } finally {
-            estaGuardando = false; // Libera el bloqueo una vez guardado con éxito
+            estaGuardando = false; // Liberamos el semáforo al terminar de guardar con éxito
         }
     }
 
@@ -507,7 +507,7 @@
         input.value = '';
         renderizarArticulosLista();
         
-        // Guardar a la fuerza antes de reactivar cualquier actualización
+        // Bloquea, guarda en la nube y asienta el cambio
         await guardarDatosNube();
     }
 
@@ -518,7 +518,7 @@
         
         renderizarArticulosLista();
         
-        // Guardar cambio de estado de inmediato
+        // Bloquea y guarda el cambio de tachado de inmediato
         await guardarDatosNube();
     }
 
@@ -526,7 +526,7 @@
         delete datosApp[cajonActivo][key];
         renderizarArticulosLista();
         
-        // Confirmar eliminación en la nube
+        // Bloquea y guarda la eliminación de inmediato
         await guardarDatosNube();
     }
 
@@ -599,7 +599,7 @@
         renderizarMenuInicio();
     }
 
-    // Sincronización en segundo plano protegida cada 5 segundos
+    // Sincronización inteligente protegida cada 5 segundos
     setInterval(cargarDatosNube, 5000);
     cargarDatosNube();
 </script>
