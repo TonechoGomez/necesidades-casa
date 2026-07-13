@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Necesidades de Casa</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --bg-main: #0f172a;
@@ -323,9 +324,8 @@
 </div>
 
 <script>
-    // Usamos una clave única basada en tu proyecto para guardar los datos en una nube compartida abierta
     const URL_NUBE = "https://api.jsonbin.io/v3/b/669255bead19ca34f8876c4a";
-    const API_KEY = "$2a$10$W2iE6Z8I49m9A8E8H7bYI.H3F/KjE6D7Wd0qO3XfE8eZ8p2l8yG1i"; // Clave pública de acceso rápido
+    const API_KEY = "$2a$10$W2iE6Z8I49m9A8E8H7bYI.H3F/KjE6D7Wd0qO3XfE8eZ8p2l8yG1i";
 
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
@@ -338,7 +338,6 @@
         { id: 'finca', nombre: 'La Finca', icono: '🏡' }
     ];
 
-    // Cargar datos de la nube
     async function cargarDatosNube() {
         try {
             const res = await fetch(URL_NUBE, {
@@ -364,7 +363,6 @@
         }
     }
 
-    // Guardar datos en la nube
     async function guardarDatosNube() {
         const estructuraAGuardar = {
             listaCoches: coches,
@@ -590,10 +588,7 @@
         renderizarMenuInicio();
     }
 
-    // Auto-actualizar cada 5 segundos para simular tiempo real entre teléfonos
     setInterval(cargarDatosNube, 5000);
-
-    // Ejecutar al abrir
     cargarDatosNube();
 </script>
 
