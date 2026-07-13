@@ -330,6 +330,7 @@
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
     let cajonActivo = '';
+    let estaGuardando = false; // "Semáforo" para que la recarga automática no pise tus cambios
 
     const apartadosFijos = [
         { id: 'super', nombre: 'Supermercado', icono: '🍏' },
@@ -339,6 +340,7 @@
     ];
 
     async function cargarDatosNube() {
+        if (estaGuardando) return; // Si la app está ocupada guardando algo que escribiste, detiene la recarga
         try {
             const res = await fetch(URL_NUBE, {
                 headers: { "X-Master-Key": API_KEY }
@@ -364,6 +366,7 @@
     }
 
     async function guardarDatosNube() {
+        estaGuardando = true; // Bloquea la recarga de fondo temporalmente
         const estructuraAGuardar = {
             listaCoches: coches,
             super: datosApp.super,
@@ -386,6 +389,8 @@
             });
         } catch (e) {
             console.error("Error al guardar", e);
+        } finally {
+            estaGuardando = false; // Libera el bloqueo una vez guardado con éxito
         }
     }
 
@@ -502,9 +507,8 @@
         input.value = '';
         renderizarArticulosLista();
         
-        // Guarda inmediatamente en la nube y vuelve a cargar los datos limpios
+        // Guardar a la fuerza antes de reactivar cualquier actualización
         await guardarDatosNube();
-        await cargarDatosNube(); 
     }
 
     async function alternarTachar(key, texto, estadoActual) {
@@ -514,18 +518,16 @@
         
         renderizarArticulosLista();
         
-        // Guarda inmediatamente el tachado
+        // Guardar cambio de estado de inmediato
         await guardarDatosNube();
-        await cargarDatosNube();
     }
 
     async function eliminarArticulo(key) {
         delete datosApp[cajonActivo][key];
         renderizarArticulosLista();
         
-        // Guarda inmediatamente la eliminación
+        // Confirmar eliminación en la nube
         await guardarDatosNube();
-        await cargarDatosNube();
     }
 
     function abrirSeccionCoches() {
@@ -597,15 +599,14 @@
         renderizarMenuInicio();
     }
 
-    // Sincronización en segundo plano cada 5 segundos
+    // Sincronización en segundo plano protegida cada 5 segundos
     setInterval(cargarDatosNube, 5000);
     cargarDatosNube();
 </script>
 <script>
-    // Registro del Service Worker obligatorio para activar la instalación en móviles
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
-            .then(() => console.log("Instalación de app activada"))
+            .then(() => console.log("Instalación de app lista"))
             .catch(err => console.error("Error", err));
     }
 </script>
