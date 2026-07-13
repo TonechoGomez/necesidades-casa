@@ -274,7 +274,6 @@
 
 <div class="phone-container">
     
-    <!-- ================= PANTALLA INICIAL ================= -->
     <div id="vista-inicio" class="view active">
         <header>
             <img class="app-logo" src="Espiral.jpg" alt="Logo Espiral">
@@ -287,7 +286,6 @@
         </div>
     </div>
 
-    <!-- ================= PANTALLA INTERIOR DE UNA LISTA ================= -->
     <div id="vista-cajon" class="view">
         <div class="interior-header">
             <button class="btn-back" onclick="irInicio()">←</button>
@@ -302,7 +300,6 @@
         <ul id="lista-articulos" class="lista-items"></ul>
     </div>
 
-    <!-- ================= PANTALLA CENTRAL DE COCHES ================= -->
     <div id="vista-seccion-coches" class="view">
         <div class="interior-header">
             <button class="btn-back" onclick="irInicio()">←</button>
@@ -330,7 +327,7 @@
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
     let cajonActivo = '';
-    let estaGuardando = false; // El semáforo para evitar que se borren los datos al escribir
+    let estaGuardando = false; 
 
     const apartadosFijos = [
         { id: 'super', nombre: 'Supermercado', icono: '🍏' },
@@ -340,7 +337,7 @@
     ];
 
     async function cargarDatosNube() {
-        if (estaGuardando) return; // Si estamos guardando algo, ignoramos la sincronización externa transitoria
+        if (estaGuardando) return; 
         try {
             const res = await fetch(URL_NUBE, {
                 headers: { "X-Master-Key": API_KEY }
@@ -366,7 +363,7 @@
     }
 
     async function guardarDatosNube() {
-        estaGuardando = true; // Activamos el semáforo de bloqueo
+        estaGuardando = true; 
         const estructuraAGuardar = {
             listaCoches: coches,
             super: datosApp.super,
@@ -390,7 +387,7 @@
         } catch (e) {
             console.error("Error al guardar", e);
         } finally {
-            estaGuardando = false; // Liberamos el semáforo al terminar de guardar con éxito
+            estaGuardando = false; 
         }
     }
 
@@ -507,8 +504,9 @@
         input.value = '';
         renderizarArticulosLista();
         
-        // Bloquea, guarda en la nube y asienta el cambio
+        // CORRECCIÓN PRINCIPAL: Bloquear y forzar que termine el guardado antes de que pase nada más
         await guardarDatosNube();
+        refrescarPantallaActual();
     }
 
     async function alternarTachar(key, texto, estadoActual) {
@@ -518,16 +516,16 @@
         
         renderizarArticulosLista();
         
-        // Bloquea y guarda el cambio de tachado de inmediato
         await guardarDatosNube();
+        refrescarPantallaActual();
     }
 
     async function eliminarArticulo(key) {
         delete datosApp[cajonActivo][key];
         renderizarArticulosLista();
         
-        // Bloquea y guarda la eliminación de inmediato
         await guardarDatosNube();
+        refrescarPantallaActual();
     }
 
     function abrirSeccionCoches() {
@@ -583,6 +581,7 @@
         input.value = '';
         renderizarPanelesCoches();
         await guardarDatosNube();
+        refrescarPantallaActual();
     }
 
     async function borrarCoche(nombre) {
@@ -590,6 +589,7 @@
         delete datosApp[nombre];
         renderizarPanelesCoches();
         await guardarDatosNube();
+        refrescarPantallaActual();
     }
 
     function irInicio() {
@@ -599,7 +599,7 @@
         renderizarMenuInicio();
     }
 
-    // Sincronización inteligente protegida cada 5 segundos
+    // Sincronización en segundo plano protegida cada 5 segundos
     setInterval(cargarDatosNube, 5000);
     cargarDatosNube();
 </script>
