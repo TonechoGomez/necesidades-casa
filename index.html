@@ -591,6 +591,14 @@
     setInterval(cargarDatosNube, 5000);
     cargarDatosNube();
 </script>
+<script>
+    // Código para que Android permita instalar la app de forma oficial
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Instalación de app activada"))
+            .catch(err => console.error("Error", err));
+    }
+</script>
 
 </body>
 </html>
