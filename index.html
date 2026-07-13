@@ -501,7 +501,10 @@
 
         input.value = '';
         renderizarArticulosLista();
+        
+        // Guarda inmediatamente en la nube y vuelve a cargar los datos limpios
         await guardarDatosNube();
+        await cargarDatosNube(); 
     }
 
     async function alternarTachar(key, texto, estadoActual) {
@@ -510,13 +513,19 @@
         datosApp[cajonActivo][key].fechaTachado = nuevoEstado ? new Date().toDateString() : null;
         
         renderizarArticulosLista();
+        
+        // Guarda inmediatamente el tachado
         await guardarDatosNube();
+        await cargarDatosNube();
     }
 
     async function eliminarArticulo(key) {
         delete datosApp[cajonActivo][key];
         renderizarArticulosLista();
+        
+        // Guarda inmediatamente la eliminación
         await guardarDatosNube();
+        await cargarDatosNube();
     }
 
     function abrirSeccionCoches() {
@@ -588,11 +597,12 @@
         renderizarMenuInicio();
     }
 
+    // Sincronización en segundo plano cada 5 segundos
     setInterval(cargarDatosNube, 5000);
     cargarDatosNube();
 </script>
 <script>
-    // Código para que Android permita instalar la app de forma oficial
+    // Registro del Service Worker obligatorio para activar la instalación en móviles
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
             .then(() => console.log("Instalación de app activada"))
