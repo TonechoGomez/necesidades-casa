@@ -321,8 +321,9 @@
 </div>
 
 <script>
-    const URL_NUBE = "https://api.jsonbin.io/v3/b/669255bead19ca34f8876c4a";
-    const API_KEY = "$2a$10$W2iE6Z8I49m9A8E8H7bYI.H3F/KjE6D7Wd0qO3XfE8eZ8p2l8yG1i";
+    // Enlace a tu nueva base de datos y contraseña asociada
+    const URL_NUBE = "https://api.jsonbin.io/v3/b/6a55dfeef5f4af5e298c34e8";
+    const API_KEY = "$2a$10$At3bV4wIYKE.DIBtiz1y2uEvkfyxpfuKC7BnNRqw3HOjhgcHaz6cC";
 
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
@@ -348,6 +349,11 @@
             const res = await fetch(URL_NUBE, {
                 headers: { "X-Master-Key": API_KEY }
             });
+            
+            if (!res.ok) {
+                throw new Error("Respuesta de red incorrecta: " + res.status);
+            }
+
             const resultado = await res.json();
             const data = resultado.record || {};
 
@@ -367,7 +373,7 @@
                 refrescarPantallaActual();
             }
         } catch (e) {
-            console.error("Error al cargar", e);
+            console.error("Error al cargar de la nube:", e);
         } finally {
             estaCargando = false;
         }
@@ -387,7 +393,7 @@
         });
 
         try {
-            await fetch(URL_NUBE, {
+            const res = await fetch(URL_NUBE, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -395,8 +401,11 @@
                 },
                 body: JSON.stringify(estructuraAGuardar)
             });
+            if (!res.ok) {
+                throw new Error("Fallo en el servidor al guardar: " + res.status);
+            }
         } catch (e) {
-            console.error("Error al guardar", e);
+            console.error("Error al guardar en la nube:", e);
         } finally {
             // Liberamos el semáforo una vez que la API en la nube ya tiene la información actualizada
             estaGuardando = false; 
