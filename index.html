@@ -327,7 +327,10 @@
     let coches = [];
     let datosApp = { super: {}, casa: {}, accesorios: {}, finca: {} };
     let cajonActivo = '';
+    
+    // Semáforos para evitar colisiones de red
     let estaGuardando = false; 
+    let estaCargando = false;
 
     const apartadosFijos = [
         { id: 'super', nombre: 'Supermercado', icono: '🍏' },
@@ -337,7 +340,10 @@
     ];
 
     async function cargarDatosNube() {
-        if (estaGuardando) return; 
+        // Si estamos guardando o ya hay otra carga en curso, no solicitamos nuevos datos todavía
+        if (estaGuardando || estaCargando) return; 
+        
+        estaCargando = true;
         try {
             const res = await fetch(URL_NUBE, {
                 headers: { "X-Master-Key": API_KEY }
@@ -345,20 +351,25 @@
             const resultado = await res.json();
             const data = resultado.record || {};
 
-            coches = data.listaCoches || [];
-            datosApp.super = data.super || {};
-            datosApp.casa = data.casa || {};
-            datosApp.accesorios = data.accesorios || {};
-            datosApp.finca = data.finca || {};
+            // Verificamos de nuevo que no hayamos empezado a guardar mientras la petición estaba en vuelo
+            if (!estaGuardando) {
+                coches = data.listaCoches || [];
+                datosApp.super = data.super || {};
+                datosApp.casa = data.casa || {};
+                datosApp.accesorios = data.accesorios || {};
+                datosApp.finca = data.finca || {};
 
-            coches.forEach(c => {
-                datosApp[c] = data[c] || {};
-            });
+                coches.forEach(c => {
+                    datosApp[c] = data[c] || {};
+                });
 
-            limpiarTachadosAntiguos();
-            refrescarPantallaActual();
+                limpiarTachadosAntiguos();
+                refrescarPantallaActual();
+            }
         } catch (e) {
             console.error("Error al cargar", e);
+        } finally {
+            estaCargando = false;
         }
     }
 
@@ -387,6 +398,7 @@
         } catch (e) {
             console.error("Error al guardar", e);
         } finally {
+            // Liberamos el semáforo una vez que la API en la nube ya tiene la información actualizada
             estaGuardando = false; 
         }
     }
@@ -504,7 +516,7 @@
         input.value = '';
         renderizarArticulosLista();
         
-        // CORRECCIÓN PRINCIPAL: Bloquear y forzar que termine el guardado antes de que pase nada más
+        // Esperamos a que guarde antes de refrescar para asegurar sincronía perfecta
         await guardarDatosNube();
         refrescarPantallaActual();
     }
