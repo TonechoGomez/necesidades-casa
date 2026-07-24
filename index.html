@@ -322,6 +322,20 @@
             font-size: 0.85rem;
         }
 
+        .item-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action-cal {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
         .btn-action-del {
             background: transparent;
             border: none;
@@ -765,8 +779,16 @@
                         ${mediaHtml ? `<div class="media-icons">${mediaHtml}</div>` : ''}
                     </div>
                 </div>
-                <button class="btn-action-del">Eliminar</button>
+                <div class="item-actions-right">
+                    <button class="btn-action-cal" title="Añadir a Google Calendar">📅</button>
+                    <button class="btn-action-del">Eliminar</button>
+                </div>
             `;
+
+            li.querySelector('.btn-action-cal').onclick = (e) => {
+                e.stopPropagation();
+                crearEventoGoogleCalendar(item);
+            };
             
             li.querySelector('.btn-action-del').onclick = (e) => {
                 e.stopPropagation();
@@ -787,6 +809,19 @@
 
             lista.appendChild(li);
         });
+    }
+
+    function crearEventoGoogleCalendar(item) {
+        const titulo = encodeURIComponent(item.texto || "Nota de Necesidades de Casa");
+        
+        let detallesTexto = `Categoría: ${cajonActivo}\nNota creada desde Necesidades de Casa.`;
+        if (item.foto) detallesTexto += `\n(Incluye foto en la app)`;
+        if (item.audio) detallesTexto += `\n(Incluye audio en la app)`;
+
+        const detalles = encodeURIComponent(detallesTexto);
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
+        
+        window.open(url, '_blank');
     }
 
     // Funciones de reordenación por arrastre en PC
