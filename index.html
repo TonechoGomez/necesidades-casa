@@ -408,6 +408,7 @@
             object-fit: contain;
             border-radius: 8px;
             background: #000;
+            cursor: zoom-in;
         }
 
         audio {
@@ -429,6 +430,32 @@
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
+        }
+
+        /* Modal para la foto ampliada a pantalla completa */
+        .modal-zoom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        .modal-zoom.active {
+            display: flex;
+        }
+
+        .modal-zoom img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -501,8 +528,8 @@
         <input type="text" id="edit-texto">
         
         <div id="modal-seccion-foto" style="display:none; flex-direction:column; gap:8px;">
-            <label style="font-size:0.85rem; color:var(--text-muted)">Fotografía adjunta:</label>
-            <img id="modal-img" class="img-preview-full" src="" alt="Foto adjunta">
+            <label style="font-size:0.85rem; color:var(--text-muted)">Fotografía adjunta (Toca para ampliar):</label>
+            <img id="modal-img" class="img-preview-full" src="" alt="Foto adjunta" onclick="ampliarImagenModal()">
             <button class="btn-action-del" style="color:var(--danger); text-align:left;" onclick="eliminarFotoModal()">🗑️ Quitar Foto</button>
         </div>
 
@@ -525,6 +552,11 @@
             <button class="btn-save" onclick="guardarCambiosModal()">Guardar Cambios</button>
         </div>
     </div>
+</div>
+
+<!-- Modal para ver Foto Ampliada -->
+<div id="modal-zoom" class="modal-zoom" onclick="cerrarImagenAmpliada()">
+    <img id="img-ampliada" src="" alt="Foto Ampliada">
 </div>
 
 <script>
@@ -948,6 +980,16 @@
     function cerrarModal() {
         document.getElementById('modal-detalle').classList.remove('active');
         itemEditandoKey = null;
+    }
+
+    function ampliarImagenModal() {
+        if (!modalFotoBase64) return;
+        document.getElementById('img-ampliada').src = modalFotoBase64;
+        document.getElementById('modal-zoom').classList.add('active');
+    }
+
+    function cerrarImagenAmpliada() {
+        document.getElementById('modal-zoom').classList.remove('active');
     }
 
     function eliminarFotoModal() {
