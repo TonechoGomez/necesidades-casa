@@ -265,6 +265,7 @@
             font-size: 1.2rem;
             padding-right: 10px;
             cursor: grab;
+            touch-action: none;
         }
 
         .item-left {
@@ -772,17 +773,23 @@
                 eliminarArticulo(key);
             };
 
-            // Eventos de arrastrar y reordenar
+            // Eventos de arrastrar con el ratón (PC)
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('drop', handleDrop);
             li.addEventListener('dragend', handleDragEnd);
 
+            // Eventos táctiles para móviles (Móvil/Tablet)
+            const handle = li.querySelector('.drag-handle');
+            handle.addEventListener('touchstart', handleTouchStart, { passive: false });
+            handle.addEventListener('touchmove', handleTouchMove, { passive: false });
+            handle.addEventListener('touchend', handleTouchEnd);
+
             lista.appendChild(li);
         });
     }
 
-    // Funciones de reordenación por arrastre
+    // Funciones de reordenación por arrastre en PC
     let dragSrcKey = null;
 
     function handleDragStart(e) {
@@ -802,30 +809,86 @@
         const targetKey = this.dataset.key;
         
         if (dragSrcKey && targetKey && dragSrcKey !== targetKey) {
-            const items = datosApp[cajonActivo] || {};
-            const keys = Object.keys(items);
-            const fromIndex = keys.indexOf(dragSrcKey);
-            const toIndex = keys.indexOf(targetKey);
-
-            if (fromIndex !== -1 && toIndex !== -1) {
-                const reordered = {};
-                keys.splice(fromIndex, 1);
-                keys.splice(toIndex, 0, dragSrcKey);
-
-                keys.forEach(k => {
-                    reordered[k] = items[k];
-                });
-
-                datosApp[cajonActivo] = reordered;
-                renderizarArticulosLista();
-                await guardarDatosNube();
-            }
+            await reordenarItems(dragSrcKey, targetKey);
         }
         return false;
     }
 
     function handleDragEnd() {
         this.classList.remove('dragging');
+    }
+
+    // Funciones de reordenación por arrastre táctil (Móviles)
+    let touchDraggedLi = null;
+
+    function handleTouchStart(e) {
+        e.preventDefault();
+        touchDraggedLi = this.closest('.item-row');
+        dragSrcKey = touchDraggedLi.dataset.key;
+        touchDraggedLi.classList.add('dragging');
+    }
+
+    function handleTouchMove(e) {
+        if (!touchDraggedLi) return;
+        e.preventDefault();
+        const touchLocation = e.touches[0];
+        const targetElement = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
+        if (targetElement) {
+            const targetLi = targetElement.closest('.item-row');
+            if (targetLi && targetLi !== touchDraggedLi) {
+                const lista = document.getElementById('lista-articulos');
+                const children = Array.from(lista.children);
+                const draggedIndex = children.indexOf(touchDraggedLi);
+                const targetIndex = children.indexOf(targetLi);
+                if (draggedIndex < targetIndex) {
+                    lista.insertBefore(touchDraggedLi, targetLi.nextSibling);
+                } else {
+                    lista.insertBefore(touchDraggedLi, targetLi);
+                }
+            }
+        }
+    }
+
+    async function handleTouchEnd(e) {
+        if (!touchDraggedLi) return;
+        touchDraggedLi.classList.remove('dragging');
+        
+        // Guardar la nueva posición
+        const lista = document.getElementById('lista-articulos');
+        const newOrder = Array.from(lista.children).map(li => li.dataset.key);
+        
+        const items = datosApp[cajonActivo] || {};
+        const reordered = {};
+        newOrder.forEach(k => {
+            if (items[k]) reordered[k] = items[k];
+        });
+        
+        datosApp[cajonActivo] = reordered;
+        touchDraggedLi = null;
+        dragSrcKey = null;
+        
+        await guardarDatosNube();
+    }
+
+    async function reordenarItems(fromKey, toKey) {
+        const items = datosApp[cajonActivo] || {};
+        const keys = Object.keys(items);
+        const fromIndex = keys.indexOf(fromKey);
+        const toIndex = keys.indexOf(toKey);
+
+        if (fromIndex !== -1 && toIndex !== -1) {
+            const reordered = {};
+            keys.splice(fromIndex, 1);
+            keys.splice(toIndex, 0, fromKey);
+
+            keys.forEach(k => {
+                reordered[k] = items[k];
+            });
+
+            datosApp[cajonActivo] = reordered;
+            renderizarArticulosLista();
+            await guardarDatosNube();
+        }
     }
 
     // Procesamiento de adjuntos (Foto y Grabación)
