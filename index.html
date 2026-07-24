@@ -151,10 +151,20 @@
             font-weight: 700;
         }
 
+        .input-group-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
         .input-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
         }
 
         input[type="text"] {
@@ -183,6 +193,48 @@
             cursor: pointer;
         }
 
+        .attach-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-media {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-media.recording {
+            background: var(--danger);
+            color: #ffffff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .preview-badge {
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .lista-items {
             list-style: none;
             padding: 0;
@@ -199,6 +251,20 @@
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .item-row.dragging {
+            opacity: 0.5;
+            background: #334155;
+        }
+
+        .drag-handle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            padding-right: 10px;
+            cursor: grab;
         }
 
         .item-left {
@@ -219,6 +285,7 @@
             font-size: 0.75rem;
             color: transparent;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .item-row.tachado .checkbox {
@@ -231,6 +298,13 @@
             content: "✓";
         }
 
+        .item-content-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
         .item-text {
             font-size: 0.95rem;
             font-weight: 500;
@@ -239,6 +313,12 @@
         .item-row.tachado .item-text {
             text-decoration: line-through;
             color: var(--text-muted);
+        }
+
+        .media-icons {
+            display: flex;
+            gap: 8px;
+            font-size: 0.85rem;
         }
 
         .btn-action-del {
@@ -268,6 +348,88 @@
             padding: 20px;
             font-size: 0.9rem;
         }
+
+        /* Modal / Panel de detalle */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .img-preview-full {
+            width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .btn-save {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -292,9 +454,17 @@
             <h2 id="titulo-cajon">Categoría</h2>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="input-articulo" placeholder="Añadir elemento a la lista...">
-            <button class="btn-add" onclick="agregarArticulo()">+</button>
+        <div class="input-group-container">
+            <div class="input-group">
+                <input type="text" id="input-articulo" placeholder="Añadir elemento a la lista...">
+                <button class="btn-add" onclick="agregarArticulo()">+</button>
+            </div>
+            <div class="attach-bar">
+                <input type="file" id="input-foto" accept="image/*" style="display:none" onchange="procesarFotoSeleccionada(event)">
+                <button class="btn-media" onclick="document.getElementById('input-foto').click()">📷 Foto</button>
+                <button class="btn-media" id="btn-record" onclick="toggleGrabarAudio()">🎙️ Audio</button>
+                <div id="preview-adjuntos"></div>
+            </div>
         </div>
 
         <ul id="lista-articulos" class="lista-items"></ul>
@@ -306,7 +476,7 @@
             <h2>Gestión de Vehículos</h2>
         </div>
 
-        <div class="input-group">
+        <div class="input-group" style="margin-bottom: 20px;">
             <input type="text" id="input-nuevo-coche" placeholder="Ej. Ford Focus, Moto...">
             <button class="btn-add" onclick="crearCoche()">+</button>
         </div>
@@ -318,6 +488,43 @@
         <ul id="lista-eliminar-coches" class="lista-items"></ul>
     </div>
 
+</div>
+
+<!-- Modal Detalle y Modificación -->
+<div id="modal-detalle" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar / Ver Elemento</h3>
+            <button class="btn-close" onclick="cerrarModal()">✕</button>
+        </div>
+        <label style="font-size:0.85rem; color:var(--text-muted)">Nombre o descripción:</label>
+        <input type="text" id="edit-texto">
+        
+        <div id="modal-seccion-foto" style="display:none; flex-direction:column; gap:8px;">
+            <label style="font-size:0.85rem; color:var(--text-muted)">Fotografía adjunta:</label>
+            <img id="modal-img" class="img-preview-full" src="" alt="Foto adjunta">
+            <button class="btn-action-del" style="color:var(--danger); text-align:left;" onclick="eliminarFotoModal()">🗑️ Quitar Foto</button>
+        </div>
+
+        <div id="modal-seccion-audio" style="display:none; flex-direction:column; gap:8px;">
+            <label style="font-size:0.85rem; color:var(--text-muted)">Nota de voz:</label>
+            <audio id="modal-audio" controls></audio>
+            <button class="btn-action-del" style="color:var(--danger); text-align:left;" onclick="eliminarAudioModal()">🗑️ Quitar Audio</button>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px;">
+            <label style="font-size:0.85rem; color:var(--text-muted)">Añadir/Cambiar foto o audio:</label>
+            <div class="attach-bar" style="margin-top: 8px;">
+                <input type="file" id="modal-input-foto" accept="image/*" style="display:none" onchange="cambiarFotoModal(event)">
+                <button class="btn-media" onclick="document.getElementById('modal-input-foto').click()">📷 Cambiar Foto</button>
+                <button class="btn-media" id="modal-btn-record" onclick="toggleGrabarAudioModal()">🎙️ Grabar Audio</button>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-save" onclick="guardarCambiosModal()">Guardar Cambios</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -333,6 +540,21 @@
     let estaGuardando = false; 
     let estaCargando = false;
 
+    // Variables para adjuntos temporales (al crear)
+    let tempFotoBase64 = null;
+    let tempAudioBase64 = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // Variables para modal / edición activa
+    let itemEditandoKey = null;
+    let modalFotoBase64 = null;
+    let modalAudioBase64 = null;
+    let modalMediaRecorder = null;
+    let modalAudioChunks = [];
+    let modalIsRecording = false;
+
     const apartadosFijos = [
         { id: 'super', nombre: 'Supermercado', icono: '🍏' },
         { id: 'casa', nombre: 'Cosas de Casa', icono: '🏠' },
@@ -341,7 +563,6 @@
     ];
 
     async function cargarDatosNube() {
-        // Si estamos guardando o ya hay otra carga en curso, no solicitamos nuevos datos todavía
         if (estaGuardando || estaCargando) return; 
         
         estaCargando = true;
@@ -357,7 +578,6 @@
             const resultado = await res.json();
             const data = resultado.record || {};
 
-            // Verificamos de nuevo que no hayamos empezado a guardar mientras la petición estaba en vuelo
             if (!estaGuardando) {
                 coches = data.listaCoches || [];
                 datosApp.super = data.super || {};
@@ -407,18 +627,22 @@
         } catch (e) {
             console.error("Error al guardar en la nube:", e);
         } finally {
-            // Liberamos el semáforo una vez que la API en la nube ya tiene la información actualizada
             estaGuardando = false; 
         }
     }
 
+    // Regla de 7 días exactos para conservar elementos tachados
     function limpiarTachadosAntiguos() {
-        const hoyStr = new Date().toDateString();
+        const ahora = Date.now();
+        const sieteDiasMs = 7 * 24 * 60 * 60 * 1000;
+
         Object.keys(datosApp).forEach(cajon => {
             Object.keys(datosApp[cajon]).forEach(key => {
                 const item = datosApp[cajon][key];
-                if (item.tachado && item.fechaTachado !== hoyStr) {
-                    delete datosApp[cajon][key];
+                if (item.tachado && item.timestampTachado) {
+                    if (ahora - item.timestampTachado > sieteDiasMs) {
+                        delete datosApp[cajon][key];
+                    }
                 }
             });
         });
@@ -476,6 +700,7 @@
         document.getElementById('vista-inicio').classList.remove('active');
         document.getElementById('vista-seccion-coches').classList.remove('active');
         document.getElementById('vista-cajon').classList.add('active');
+        limpiarAdjuntosInput();
         renderizarArticulosLista();
     }
 
@@ -484,17 +709,28 @@
         lista.innerHTML = '';
         const items = datosApp[cajonActivo] || {};
 
-        Object.keys(items).forEach(key => {
+        Object.keys(items).forEach((key, index) => {
             const item = items[key];
             const claseTachado = item.tachado ? 'tachado' : '';
             
             const li = document.createElement('li');
             li.className = `item-row ${claseTachado}`;
-            li.onclick = () => alternarTachar(key, item.texto, item.tachado);
+            li.draggable = true;
+            li.dataset.key = key;
+
+            // Badges para foto y audio
+            let mediaHtml = '';
+            if (item.foto) mediaHtml += `<span>📷</span>`;
+            if (item.audio) mediaHtml += `<span>🎙️</span>`;
+
             li.innerHTML = `
+                <div class="drag-handle">⋮⋮</div>
                 <div class="item-left">
-                    <div class="checkbox"></div>
-                    <span class="item-text">${item.texto}</span>
+                    <div class="checkbox" onclick="event.stopPropagation(); alternarTachar('${key}', ${item.tachado})"></div>
+                    <div class="item-content-box" onclick="abrirModalDetalle('${key}')">
+                        <span class="item-text">${item.texto}</span>
+                        ${mediaHtml ? `<div class="media-icons">${mediaHtml}</div>` : ''}
+                    </div>
                 </div>
                 <button class="btn-action-del">Eliminar</button>
             `;
@@ -503,37 +739,165 @@
                 e.stopPropagation();
                 eliminarArticulo(key);
             };
-            
+
+            // Eventos de arrastrar y reordenar
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragover', handleDragOver);
+            li.addEventListener('drop', handleDrop);
+            li.addEventListener('dragend', handleDragEnd);
+
             lista.appendChild(li);
         });
+    }
+
+    // Funciones de reordenación por arrastre
+    let dragSrcKey = null;
+
+    function handleDragStart(e) {
+        dragSrcKey = this.dataset.key;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    async function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        const targetKey = this.dataset.key;
+        
+        if (dragSrcKey && targetKey && dragSrcKey !== targetKey) {
+            const items = datosApp[cajonActivo] || {};
+            const keys = Object.keys(items);
+            const fromIndex = keys.indexOf(dragSrcKey);
+            const toIndex = keys.indexOf(targetKey);
+
+            if (fromIndex !== -1 && toIndex !== -1) {
+                const reordered = {};
+                keys.splice(fromIndex, 1);
+                keys.splice(toIndex, 0, dragSrcKey);
+
+                keys.forEach(k => {
+                    reordered[k] = items[k];
+                });
+
+                datosApp[cajonActivo] = reordered;
+                renderizarArticulosLista();
+                await guardarDatosNube();
+            }
+        }
+        return false;
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+    }
+
+    // Procesamiento de adjuntos (Foto y Grabación)
+    function procesarFotoSeleccionada(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 600;
+                let scale = MAX_WIDTH / img.width;
+                if (scale > 1) scale = 1;
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                tempFotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                actualizarPreviewAdjuntos();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function toggleGrabarAudio() {
+        const btn = document.getElementById('btn-record');
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        tempAudioBase64 = reader.result;
+                        actualizarPreviewAdjuntos();
+                    };
+                    reader.readAsDataURL(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                btn.classList.add('recording');
+                btn.innerText = '🔴 Grabando...';
+            } catch (err) {
+                alert('No se pudo acceder al micrófono');
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            btn.classList.remove('recording');
+            btn.innerText = '🎙️ Audio';
+        }
+    }
+
+    function actualizarPreviewAdjuntos() {
+        const container = document.getElementById('preview-adjuntos');
+        container.innerHTML = '';
+        if (tempFotoBase64) container.innerHTML += `<span class="preview-badge">📷 Foto ok</span>`;
+        if (tempAudioBase64) container.innerHTML += `<span class="preview-badge">🎙️ Audio ok</span>`;
+    }
+
+    function limpiarAdjuntosInput() {
+        tempFotoBase64 = null;
+        tempAudioBase64 = null;
+        document.getElementById('input-foto').value = '';
+        actualizarPreviewAdjuntos();
     }
 
     async function agregarArticulo() {
         const input = document.getElementById('input-articulo');
         const texto = input.value.trim();
-        if (texto === '') return;
+        if (texto === '' && !tempFotoBase64 && !tempAudioBase64) return;
 
         const idUnico = "item_" + Date.now();
         if (!datosApp[cajonActivo]) datosApp[cajonActivo] = {};
         
         datosApp[cajonActivo][idUnico] = {
-            texto: texto,
+            texto: texto || 'Elemento con adjunto',
             tachado: false,
-            fechaTachado: null
+            timestampTachado: null,
+            foto: tempFotoBase64,
+            audio: tempAudioBase64
         };
 
         input.value = '';
+        limpiarAdjuntosInput();
         renderizarArticulosLista();
         
-        // Esperamos a que guarde antes de refrescar para asegurar sincronía perfecta
         await guardarDatosNube();
         refrescarPantallaActual();
     }
 
-    async function alternarTachar(key, texto, estadoActual) {
+    async function alternarTachar(key, estadoActual) {
         const nuevoEstado = !estadoActual;
         datosApp[cajonActivo][key].tachado = nuevoEstado;
-        datosApp[cajonActivo][key].fechaTachado = nuevoEstado ? new Date().toDateString() : null;
+        datosApp[cajonActivo][key].timestampTachado = nuevoEstado ? Date.now() : null;
         
         renderizarArticulosLista();
         
@@ -549,6 +913,130 @@
         refrescarPantallaActual();
     }
 
+    // Modal para Ver / Editar
+    function abrirModalDetalle(key) {
+        itemEditandoKey = key;
+        const item = datosApp[cajonActivo][key];
+        if (!item) return;
+
+        document.getElementById('edit-texto').value = item.texto || '';
+
+        modalFotoBase64 = item.foto || null;
+        modalAudioBase64 = item.audio || null;
+
+        const secFoto = document.getElementById('modal-seccion-foto');
+        const imgEl = document.getElementById('modal-img');
+        if (modalFotoBase64) {
+            imgEl.src = modalFotoBase64;
+            secFoto.style.display = 'flex';
+        } else {
+            secFoto.style.display = 'none';
+        }
+
+        const secAudio = document.getElementById('modal-seccion-audio');
+        const audioEl = document.getElementById('modal-audio');
+        if (modalAudioBase64) {
+            audioEl.src = modalAudioBase64;
+            secAudio.style.display = 'flex';
+        } else {
+            secAudio.style.display = 'none';
+        }
+
+        document.getElementById('modal-detalle').classList.add('active');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-detalle').classList.remove('active');
+        itemEditandoKey = null;
+    }
+
+    function eliminarFotoModal() {
+        modalFotoBase64 = null;
+        document.getElementById('modal-seccion-foto').style.display = 'none';
+    }
+
+    function eliminarAudioModal() {
+        modalAudioBase64 = null;
+        document.getElementById('modal-seccion-audio').style.display = 'none';
+    }
+
+    function cambiarFotoModal(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 600;
+                let scale = MAX_WIDTH / img.width;
+                if (scale > 1) scale = 1;
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                modalFotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                
+                document.getElementById('modal-img').src = modalFotoBase64;
+                document.getElementById('modal-seccion-foto').style.display = 'flex';
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function toggleGrabarAudioModal() {
+        const btn = document.getElementById('modal-btn-record');
+        if (!modalIsRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                modalMediaRecorder = new MediaRecorder(stream);
+                modalAudioChunks = [];
+
+                modalMediaRecorder.ondataavailable = e => modalAudioChunks.push(e.data);
+                modalMediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(modalAudioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        modalAudioBase64 = reader.result;
+                        document.getElementById('modal-audio').src = modalAudioBase64;
+                        document.getElementById('modal-seccion-audio').style.display = 'flex';
+                    };
+                    reader.readAsDataURL(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                modalMediaRecorder.start();
+                modalIsRecording = true;
+                btn.classList.add('recording');
+                btn.innerText = '🔴 Grabando...';
+            } catch (err) {
+                alert('No se pudo acceder al micrófono');
+            }
+        } else {
+            modalMediaRecorder.stop();
+            modalIsRecording = false;
+            btn.classList.remove('recording');
+            btn.innerText = '🎙️ Audio';
+        }
+    }
+
+    async function guardarCambiosModal() {
+        if (!itemEditandoKey || !datosApp[cajonActivo][itemEditandoKey]) return;
+
+        const nuevoTexto = document.getElementById('edit-texto').value.trim();
+        datosApp[cajonActivo][itemEditandoKey].texto = nuevoTexto || 'Elemento con adjunto';
+        datosApp[cajonActivo][itemEditandoKey].foto = modalFotoBase64;
+        datosApp[cajonActivo][itemEditandoKey].audio = modalAudioBase64;
+
+        cerrarModal();
+        renderizarArticulosLista();
+        await guardarDatosNube();
+        refrescarPantallaActual();
+    }
+
+    // Gestión de coches
     function abrirSeccionCoches() {
         document.getElementById('vista-inicio').classList.remove('active');
         document.getElementById('vista-seccion-coches').classList.add('active');
